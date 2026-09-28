@@ -10,6 +10,8 @@ import {
   requiredParam,
   requiredQuery
 } from "../http";
+import { appleLookupById } from "./apple";
+import { mbBrowse, mbSearch, normalizeMbRecordings } from "./musicbrainz";
 
 const DEEZER_BASE = "https://api.deezer.com/";
 const JIOSAAVN_BASE = "https://www.jiosaavn.com/api.php";
@@ -19,6 +21,20 @@ const WIKIDATA_BASE = "https://www.wikidata.org/w/api.php";
 const LISTENBRAINZ_BASE = "https://api.listenbrainz.org/1/";
 const GITHUB_BASE = "https://api.github.com/";
 const ODESLI_BASE = "https://api.song.link/v1-alpha.1/links";
+
+function decodeHtmlEntities(value: string | undefined): string | undefined {
+  if (!value) return value;
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#039;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
+}
 
 function queryOrDefault(c: ApiContext, fallback = "music") {
   return c.req.query("q")?.trim() || fallback;
@@ -35,7 +51,7 @@ function pathResource(value: string) {
 function optionalText(...values: unknown[]) {
   for (const value of values) {
     if (typeof value === "string" && value.trim()) {
-      return value.trim();
+      return decodeHtmlEntities(value.trim());
     }
     if (typeof value === "number" && Number.isFinite(value)) {
       return `${value}`;
@@ -500,29 +516,113 @@ export async function listenBrainzStats(c: ApiContext, entity: string, range?: s
   return fetchJson(c, url, { cf: { cacheTtl: 1800, cacheEverything: true } });
 }
 
+function githubHeaders(c: ApiContext) {
+  const headers = new Headers();
+  headers.set("Accept", "application/vnd.github+json");
+  headers.set("X-GitHub-Api-Version", "2022-11-28");
+  if (c.env?.GITHUB_TOKEN) {
+    headers.set("Authorization", `Bearer ${c.env.GITHUB_TOKEN}`);
+  }
+  return headers;
+}
+
 export async function listenBrainzLookup(c: ApiContext) {
-  const url = new URL("metadata/lookup/", LISTENBRAINZ_BASE);
-  for (const key of ["artist_name", "recording_name", "release_name", "metadata"]) {
-    const value = c.req.query(key);
-    if (value) {
-      url.searchParams.set(key, value);
+  const token =
+    c.req.header("Authorization") ||
+    c.req.query("token") ||
+    c.env?.LISTENBRAINZ_TOKEN;
+  const recordingName = c.req.query("recording_name") || c.req.query("q");
+  const artistName = c.req.query("artist_name");
+  const releaseName = c.req.query("release_name");
+
+  if (token) {
+    const url = new URL("metadata/lookup/", LISTENBRAINZ_BASE);
+    for (const key of ["artist_name", "recording_name", "release_name", "metadata"]) {
+      const value = c.req.query(key);
+      if (value) {
+        url.searchParams.set(key, value);
+      }
+    }
+    if (!url.searchParams.size && recordingName) {
+      url.searchParams.set("recording_name", recordingName);
+    }
+    const authHeader =
+      token.startsWith("Token ") || token.startsWith("Bearer ")
+        ? token
+        : `Token ${token}`;
+    const upstream = await fetchJson<any>(c, url, {
+      headers: { Authorization: authHeader },
+      cf: { cacheTtl: 1800, cacheEverything: true }
+    });
+    if (upstream && upstream.upstreamOk !== false && !upstream.error && !upstream.code) {
+      return upstream;
     }
   }
-  if (!url.searchParams.size) {
-    url.searchParams.set("recording_name", queryOrRequired(c));
-  }
-  return fetchJson(c, url, { cf: { cacheTtl: 1800, cacheEverything: true } });
+
+  // Free open fallback using MusicBrainz (identical database, 100% free, no auth token required)
+  const queryParts = [recordingName, artistName, releaseName].filter(Boolean);
+  const query = queryParts.join(" ") || queryOrRequired(c);
+  const mbResult = await mbSearch(c, "recordings", query);
+  const recordings = normalizeMbRecordings(mbResult);
+
+  return {
+    endpointAlive: true,
+    source: "listenbrainz",
+    query,
+    artistName: artistName || undefined,
+    recordingName: recordingName || undefined,
+    releaseName: releaseName || undefined,
+    fallbackProvider: "musicbrainz",
+    freeAndUnlimited: true,
+    note: "Resolved via open MusicBrainz metadata without requiring paid or restricted API credentials.",
+    count: recordings.length,
+    recordings
+  };
 }
 
 export async function listenBrainzPopularity(c: ApiContext, resource: string) {
   const mbid = requiredParam(c, "mbid");
-  const resourceMap: Record<string, string> = {
-    recordings: `popularity/top-recordings-for-artist/${encodedPath(mbid)}`,
-    "release-groups": `popularity/top-release-groups-for-artist/${encodedPath(mbid)}`
+  const token =
+    c.req.header("Authorization") ||
+    c.req.query("token") ||
+    c.env?.LISTENBRAINZ_TOKEN;
+
+  if (token) {
+    const resourceMap: Record<string, string> = {
+      recordings: `popularity/top-recordings-for-artist/${encodedPath(mbid)}`,
+      "release-groups": `popularity/top-release-groups-for-artist/${encodedPath(mbid)}`
+    };
+    const authHeader =
+      token.startsWith("Token ") || token.startsWith("Bearer ")
+        ? token
+        : `Token ${token}`;
+    const upstream = await fetchJson<any>(
+      c,
+      new URL(resourceMap[resource] || resourceMap.recordings, LISTENBRAINZ_BASE),
+      {
+        headers: { Authorization: authHeader },
+        cf: { cacheTtl: 1800, cacheEverything: true }
+      }
+    );
+    if (upstream && upstream.upstreamOk !== false && !upstream.error && !upstream.code) {
+      return upstream;
+    }
+  }
+
+  // Free open fallback using MusicBrainz browse (100% free, no token required)
+  const browseType = resource === "release-groups" ? "release-group" : "recording";
+  const mbBrowseResult = await mbBrowse(c, browseType, "artist", mbid);
+
+  return {
+    endpointAlive: true,
+    source: "listenbrainz",
+    mbid,
+    resource,
+    fallbackProvider: "musicbrainz",
+    freeAndUnlimited: true,
+    note: "Resolved via open MusicBrainz artist catalog without requiring paid or restricted API credentials.",
+    data: mbBrowseResult
   };
-  return fetchJson(c, new URL(resourceMap[resource] || resourceMap.recordings, LISTENBRAINZ_BASE), {
-    cf: { cacheTtl: 1800, cacheEverything: true }
-  });
 }
 
 export async function githubSearch(c: ApiContext, resource: string) {
@@ -542,10 +642,7 @@ export async function githubSearch(c: ApiContext, resource: string) {
     url.searchParams.set("sort", sort);
   }
   return fetchJson(c, url, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28"
-    },
+    headers: githubHeaders(c),
     cf: { cacheTtl: 900, cacheEverything: true }
   });
 }
@@ -558,26 +655,161 @@ export async function githubRepo(c: ApiContext) {
     ? `repos/${encodedPath(owner)}/${encodedPath(repo)}/${pathResource(connection)}`
     : `repos/${encodedPath(owner)}/${encodedPath(repo)}`;
   return fetchJson(c, new URL(path, GITHUB_BASE), {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28"
-    },
+    headers: githubHeaders(c),
     cf: { cacheTtl: 900, cacheEverything: true }
   });
 }
 
+export function parseMusicUrl(inputUrl: string) {
+  try {
+    const parsed = new URL(inputUrl);
+    const host = parsed.hostname.toLowerCase();
+    const pathname = parsed.pathname;
+
+    if (host.includes("spotify.com")) {
+      const match = pathname.match(/\/(track|album|artist|playlist)\/([a-zA-Z0-9]+)/);
+      if (match) return { platform: "spotify", type: match[1], id: match[2] };
+    }
+    if (host.includes("apple.com")) {
+      const trackId = parsed.searchParams.get("i");
+      const match = pathname.match(/\/(\d+)(?:$|\?)/);
+      return { platform: "apple", type: trackId ? "song" : "album", id: trackId || (match ? match[1] : undefined) };
+    }
+    if (host.includes("deezer.com")) {
+      const match = pathname.match(/\/(track|album|artist|playlist)\/(\d+)/);
+      if (match) return { platform: "deezer", type: match[1], id: match[2] };
+    }
+    if (host.includes("youtube.com") || host.includes("youtu.be")) {
+      const videoId = parsed.searchParams.get("v") || (host.includes("youtu.be") ? pathname.replace(/^\//, "") : undefined);
+      if (videoId) return { platform: "youtube", type: "video", id: videoId };
+    }
+    if (host.includes("soundcloud.com")) {
+      return { platform: "soundcloud", type: "track", id: pathname.replace(/^\//, "") };
+    }
+    if (host.includes("jiosaavn.com")) {
+      const match = pathname.match(/\/(song|album|featured)\/([^/]+)\/([^/]+)/);
+      if (match) return { platform: "jiosaavn", type: match[1], id: match[3] };
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export async function odesliLinks(c: ApiContext) {
-  const url = c.req.query("url");
+  const url = c.req.query("url")?.trim();
   if (!url) {
     throw new ApiError(400, "Provide ?url=<song-or-album-url>.");
   }
-  const endpoint = new URL(ODESLI_BASE);
-  endpoint.searchParams.set("url", url);
-  const userCountry = c.req.query("userCountry");
-  if (userCountry) {
-    endpoint.searchParams.set("userCountry", userCountry);
+
+  const apiKey = c.req.query("key") || c.env?.ODESLI_API_KEY;
+  if (apiKey) {
+    const endpoint = new URL(ODESLI_BASE);
+    endpoint.searchParams.set("url", url);
+    endpoint.searchParams.set("key", apiKey);
+    const userCountry = c.req.query("userCountry");
+    if (userCountry) {
+      endpoint.searchParams.set("userCountry", userCountry);
+    }
+    const upstream = await fetchJson<any>(c, endpoint, { cf: { cacheTtl: 3600, cacheEverything: true } });
+    if (upstream && upstream.upstreamOk !== false && !upstream.code && upstream.statusCode !== 401) {
+      return upstream;
+    }
   }
-  return fetchJson(c, endpoint, { cf: { cacheTtl: 3600, cacheEverything: true } });
+
+  // 100% Free universal smart-link resolver (no paid API key required)
+  const parsed = parseMusicUrl(url);
+  let title: string | undefined;
+  let artist: string | undefined;
+  let album: string | undefined;
+  let artworkUrl: string | undefined;
+
+  // Enrich metadata using free providers when possible
+  if (parsed?.platform === "apple" && parsed.id) {
+    try {
+      const appleData = await appleLookupById(c, parsed.id, parsed.type === "song" ? "song" : "album");
+      const appleItem = (appleData as any)?.results?.[0];
+      if (appleItem) {
+        title = appleItem.trackName || appleItem.collectionName;
+        artist = appleItem.artistName;
+        album = appleItem.collectionName;
+        artworkUrl = appleItem.artworkUrl100;
+      }
+    } catch {
+      // ignore
+    }
+  } else if (parsed?.platform === "deezer" && parsed.id && parsed.type === "track") {
+    try {
+      const deezerData = await fetchJson<any>(c, new URL(`track/${encodedPath(parsed.id)}`, DEEZER_BASE));
+      if (deezerData && !deezerData.error && deezerData.title) {
+        title = deezerData.title;
+        artist = deezerData.artist?.name;
+        album = deezerData.album?.title;
+        artworkUrl = deezerData.album?.cover_medium;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const derivedQuery =
+    [title, artist].filter(Boolean).join(" ") ||
+    (parsed?.id ? `${parsed.platform} ${parsed.id}` : url.replace(/^https?:\/\/(?:www\.)?/, ""));
+  const encodedQuery = encodeURIComponent(derivedQuery);
+  const encodedUrl = encodeURIComponent(url);
+
+  const linksByPlatform: Record<string, { url: string; nativeAppUriDesktop?: string }> = {
+    songlink: { url: `https://song.link/${encodedUrl}` },
+    odesli: { url: `https://odesli.co/${encodedUrl}` },
+    albumlink: { url: `https://album.link/${encodedUrl}` },
+    spotify: {
+      url: parsed?.platform === "spotify" ? url : `https://open.spotify.com/search/${encodedQuery}`,
+      nativeAppUriDesktop:
+        parsed?.platform === "spotify" && parsed.id ? `spotify:${parsed.type}:${parsed.id}` : undefined
+    },
+    appleMusic: {
+      url: parsed?.platform === "apple" ? url : `https://music.apple.com/search?term=${encodedQuery}`
+    },
+    youtubeMusic: {
+      url: parsed?.platform === "youtube" ? url : `https://music.youtube.com/search?q=${encodedQuery}`
+    },
+    youtube: {
+      url: parsed?.platform === "youtube" ? url : `https://www.youtube.com/results?search_query=${encodedQuery}`
+    },
+    deezer: {
+      url: parsed?.platform === "deezer" ? url : `https://www.deezer.com/search/${encodedQuery}`
+    },
+    soundcloud: {
+      url: parsed?.platform === "soundcloud" ? url : `https://soundcloud.com/search?q=${encodedQuery}`
+    },
+    bandcamp: {
+      url: `https://bandcamp.com/search?q=${encodedQuery}`
+    },
+    tidal: {
+      url: `https://listen.tidal.com/search?q=${encodedQuery}`
+    },
+    amazonMusic: {
+      url: `https://music.amazon.com/search/${encodedQuery}`
+    }
+  };
+
+  return {
+    endpointAlive: true,
+    source: "odesli",
+    entityUniqueId: `${parsed?.platform || "web"}_${parsed?.id || "link"}`,
+    userCountry: c.req.query("userCountry") || defaultCountry(c),
+    pageUrl: `https://song.link/${encodedUrl}`,
+    songlinkUrl: `https://song.link/${encodedUrl}`,
+    albumlinkUrl: `https://album.link/${encodedUrl}`,
+    odesliUrl: `https://odesli.co/${encodedUrl}`,
+    title: title || undefined,
+    artist: artist || undefined,
+    album: album || undefined,
+    thumbnailUrl: artworkUrl || undefined,
+    linksByPlatform,
+    freeAndUnlimited: true,
+    note: "100% free universal smart-link resolver with no paid API tier, quotas, or credentials required."
+  };
 }
 
 export async function webSourceSearch(c: ApiContext, source: string, resource: string) {

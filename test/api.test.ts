@@ -194,4 +194,64 @@ describe("SayaMusicAPI", () => {
       expect(response.status).not.toBe(404);
     }
   });
+
+  it("resolves Odesli smart links freely without paid API key", async () => {
+    const response = await app.request(
+      "/v1/odesli/links?url=https%3A%2F%2Fopen.spotify.com%2Ftrack%2F4cOdK2wGLETKBW3PvgPWqT"
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.data.source).toBe("odesli");
+    expect(body.data.freeAndUnlimited).toBe(true);
+    expect(body.data.songlinkUrl).toContain("https://song.link/");
+    expect(body.data.linksByPlatform.spotify.url).toContain("spotify.com");
+    expect(body.data.linksByPlatform.appleMusic.url).toContain("apple.com");
+    expect(body.data.linksByPlatform.youtubeMusic.url).toContain("youtube.com");
+  });
+
+  it("handles ListenBrainz metadata lookup with free MusicBrainz fallback", async () => {
+    const response = await app.request(
+      "/v1/listenbrainz/metadata/lookup?recording_name=believer"
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.data.source).toBe("listenbrainz");
+    expect(body.data.freeAndUnlimited).toBe(true);
+    expect(Array.isArray(body.data.recordings)).toBe(true);
+    expect(body.data.recordings.length).toBeGreaterThan(0);
+  });
+
+  it("handles ListenBrainz artist popularity with free MusicBrainz browse fallback", async () => {
+    const response = await app.request(
+      "/v1/listenbrainz/popularity/a74b1b7f-71a5-4011-9441-d0b5e4122711/recordings"
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.data.source).toBe("listenbrainz");
+    expect(body.data.freeAndUnlimited).toBe(true);
+  });
+
+  it("resolves provider URL freely via /v1/resolve", async () => {
+    const response = await app.request(
+      "/v1/resolve?url=https%3A%2F%2Fopen.spotify.com%2Ftrack%2F4cOdK2wGLETKBW3PvgPWqT"
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.data.freeAndUnlimited).toBe(true);
+    expect(body.data.songlinkUrl).toBeDefined();
+  });
+
+  it("supports id alias for identifier in archive media stream", async () => {
+    const response = await app.request(
+      "/v1/media/stream?source=archive&id=opensource_audio"
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.data.identifier).toBe("opensource_audio");
+  });
 });

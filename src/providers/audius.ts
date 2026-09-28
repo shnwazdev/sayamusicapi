@@ -50,11 +50,14 @@ export async function audiusTrack(c: ApiContext) {
 export async function audiusTrackStream(c: ApiContext, trackId?: string) {
   const id = trackId || requiredParam(c, "id");
   const url = new URL(`v1/tracks/${id}/stream`, AUDIUS_BASE);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
   let response: Response;
   try {
     response = await fetch(url.toString(), {
       headers: audiusHeaders(c),
       redirect: "manual",
+      signal: controller.signal,
       cf: { cacheTtl: 300, cacheEverything: true }
     } as RequestInit & { cf?: unknown });
   } catch (error) {
@@ -66,6 +69,8 @@ export async function audiusTrackStream(c: ApiContext, trackId?: string) {
       message: "Endpoint is alive, but Audius stream lookup could not be completed.",
       details: error instanceof Error ? error.message : "Network request failed"
     };
+  } finally {
+    clearTimeout(timeout);
   }
 
   const location = response.headers.get("Location");

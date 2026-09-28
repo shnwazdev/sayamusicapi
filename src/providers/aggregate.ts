@@ -1,5 +1,5 @@
 import type { ApiContext } from "../http";
-import { ApiError, requiredQuery, settledRecord, yes } from "../http";
+import { ApiError, encodedPath, fetchJson, requiredQuery, settledRecord, yes } from "../http";
 import {
   appleLookupById,
   applePreview,
@@ -9,7 +9,7 @@ import {
 import { archivePlayable, archiveSearch } from "./archive";
 import { audiusSearch, audiusTrackStream, normalizeAudiusTracks } from "./audius";
 import { coverArtJson } from "./coverArt";
-import { jioSaavnSearch } from "./extraSources";
+import { jioSaavnSearch, odesliLinks } from "./extraSources";
 import { mbSearch, normalizeMbRecordings } from "./musicbrainz";
 
 type AggregateType =
@@ -150,16 +150,15 @@ export async function matchSong(c: ApiContext) {
   };
 }
 
+const RADIO_BASE = "https://de1.api.radio-browser.info/json/";
+const DEEZER_BASE = "https://api.deezer.com/";
+
 export async function resolveUrl(c: ApiContext) {
   const url = c.req.query("url")?.trim();
   if (!url) {
     throw new ApiError(400, "Provide ?url=<provider-url>.");
   }
-  return {
-    url,
-    message:
-      "Provider URL resolving is intentionally conservative. Use provider IDs for exact stream, preview, artwork, and metadata lookup."
-  };
+  return odesliLinks(c);
 }
 
 export async function mediaPreview(c: ApiContext) {
@@ -173,7 +172,7 @@ export async function mediaPreview(c: ApiContext) {
 }
 
 export async function mediaStream(c: ApiContext) {
-  const source = c.req.query("source");
+  const source = c.req.query("source")?.toLowerCase();
   if (source === "audius") {
     const id = c.req.query("id");
     if (!id) {
@@ -184,9 +183,38 @@ export async function mediaStream(c: ApiContext) {
   if (source === "archive") {
     return archivePlayable(c);
   }
+  if (source === "radio" || source === "radio-browser") {
+    const uuid = c.req.query("uuid") || c.req.query("id");
+    if (!uuid) {
+      throw new ApiError(400, "Provide ?source=radio-browser&uuid=<station_uuid>.");
+    }
+    return fetchJson(c, new URL(`url/${encodedPath(uuid)}`, RADIO_BASE));
+  }
+  if (source === "deezer") {
+    const id = c.req.query("id");
+    if (!id) {
+      throw new ApiError(400, "Provide ?source=deezer&id=<track_id>.");
+    }
+    const track = await fetchJson<any>(c, new URL(`track/${encodedPath(id)}`, DEEZER_BASE));
+    if (!track?.preview) {
+      return {
+        id,
+        streamUrl: null,
+        message: "No preview stream available for this Deezer track."
+      };
+    }
+    return {
+      id,
+      title: track.title,
+      artist: track.artist?.name,
+      streamUrl: track.preview,
+      quality: "Deezer 30-second preview clip (MP3 128kbps)",
+      source: "deezer"
+    };
+  }
   throw new ApiError(
     400,
-    "Supported legal stream sources are ?source=audius&id=<id> and ?source=archive&identifier=<id>."
+    "Supported legal stream sources are ?source=audius&id=<id>, ?source=archive&identifier=<id>, ?source=radio-browser&uuid=<uuid>, and ?source=deezer&id=<id>."
   );
 }
 
@@ -195,7 +223,7 @@ export async function mediaDownload(c: ApiContext) {
   if (source !== "archive") {
     throw new ApiError(
       400,
-      "Downloads are only resolved for Internet Archive public/free files. Use ?source=archive&identifier=<id>."
+      "Downloads are only resolved for Internet Archive public/free files. Use ?source=archive&identifier=<id> (or &id=<id>)."
     );
   }
   return archivePlayable(c);
@@ -224,9 +252,21 @@ export async function mediaQuality(c: ApiContext) {
         "Internet Archive files expose their original format, size, and derivative formats per item metadata."
     };
   }
+  if (source === "deezer") {
+    return {
+      source,
+      quality: "Deezer returns 30-second MP3 preview clips at 128 kbps."
+    };
+  }
+  if (source === "radio" || source === "radio-browser") {
+    return {
+      source,
+      quality: "Radio Browser live audio streams provided directly by broadcasting stations."
+    };
+  }
   return {
     source,
-    quality: "Unknown source. Use apple, audius, or archive."
+    quality: "Supported sources: apple, audius, archive, deezer, radio-browser."
   };
 }
 

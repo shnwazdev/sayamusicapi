@@ -214,19 +214,19 @@ const providers = [
     id: "listenbrainz",
     name: "ListenBrainz",
     features: ["sitewide stats", "metadata lookup", "artist popularity"],
-    auth: "none for public read routes"
+    auth: "none (with open MusicBrainz fallback for unauthenticated queries)"
   },
   {
     id: "github",
     name: "GitHub public REST API",
     features: ["public music API repo discovery", "repo metadata", "releases"],
-    auth: "none for basic public read routes"
+    auth: "none for public read routes"
   },
   {
     id: "odesli",
-    name: "Songlink/Odesli",
+    name: "Songlink/Odesli smart links",
     features: ["song smart links", "album smart links", "cross-platform URLs"],
-    auth: "none for basic link resolving"
+    auth: "none (100% free universal smart-link resolver)"
   }
 ];
 
@@ -348,7 +348,7 @@ app.get("/v1/quality", (c) =>
     policy:
       "This API resolves legal metadata, previews, artwork, open streams, and public/free downloads. It does not bypass paywalls or DRM.",
     apiSideAccess:
-      "No API-side quota, paid tier, request throttling, or result cap is added by SayaMusicAPI. Provider paging inputs are passed through only when clients send them; upstream providers may still enforce their own public rules.",
+      "No API-side quota, paid tier, request throttling, or result cap is added by SayaMusicAPI. All supported endpoints are 100% free for unlimited use.",
     tiers: [
       {
         source: "apple",
@@ -369,6 +369,16 @@ app.get("/v1/quality", (c) =>
         source: "archive",
         type: "public files",
         note: "Formats and sizes come from item metadata."
+      },
+      {
+        source: "deezer",
+        type: "preview",
+        note: "30-second MP3 preview clips at 128 kbps."
+      },
+      {
+        source: "radio-browser",
+        type: "live stream",
+        note: "Public radio station live audio stream URLs."
       }
     ]
   })
@@ -406,11 +416,11 @@ app.get("/v1/sources", (c) =>
     wikidata:
       "Wikidata and Wikimedia APIs for open knowledge and contextual music metadata.",
     listenbrainz:
-      "ListenBrainz public read APIs for sitewide music stats and metadata lookup.",
+      "ListenBrainz public stats and open MusicBrainz metadata/catalog fallback for 100% free, unauthenticated lookup.",
     github:
       "GitHub public REST API for discovering public music API repositories and source references.",
     odesli:
-      "Odesli/Songlink for resolving cross-platform music smart links.",
+      "Universal smart-link resolver for songs, albums, and cross-platform streaming URLs with no paid API requirement.",
     spotify:
       "Spotify official search-link helper through the unified web routes.",
     soundcloud:

@@ -29,7 +29,11 @@ const playableFormats = [
 ];
 
 function archiveIdentifier(c: ApiContext) {
-  const identifier = c.req.param("identifier") || c.req.query("identifier");
+  const identifier =
+    c.req.param("identifier") ||
+    c.req.query("identifier") ||
+    c.req.query("id") ||
+    c.req.param("id");
   if (!identifier) {
     return requiredParam(c, "identifier");
   }
