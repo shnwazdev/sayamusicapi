@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" width="1000" height="400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080c18"/>
+      <stop offset="50%" stop-color="#0d1424"/>
+      <stop offset="100%" stop-color="#060913"/>
+    </linearGradient>
+
+    <!-- Card Glow Gradients -->
+    <linearGradient id="glowSearch" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="glowStream" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="glowLinks" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="glowMeta" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="glowFree" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="glowEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+
+    <style>
+      .card {
+        transition: transform 0.3s ease, stroke 0.3s ease;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+      }
+      .card-title {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .card-desc {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.4;
+        fill: #94a3b8;
+      }
+      .badge {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 10px;
+        font-weight: 600;
+      }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1000" height="400" rx="16" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="1.5"/>
+
+  <!-- Row 1, Card 1: Universal Search -->
+  <g class="card" transform="translate(30, 30)">
+    <rect width="295" height="155" rx="12" fill="#0f172a" stroke="#06b6d4" stroke-opacity="0.4" stroke-width="1.2" filter="url(#cardShadow)"/>
+    <rect width="295" height="155" rx="12" fill="url(#glowSearch)"/>
+    <!-- Icon: Magnifying Glass + Wave -->
+    <g transform="translate(20, 20)">
+      <circle cx="18" cy="18" r="16" fill="#06b6d4" fill-opacity="0.15" stroke="#06b6d4" stroke-width="1"/>
+      <circle cx="16" cy="16" r="6" fill="none" stroke="#22d3ee" stroke-width="2"/>
+      <line x1="20.5" y1="20.5" x2="25" y2="25" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"/>
+      <path d="M14 13a3 3 0 0 1 3 3" fill="none" stroke="#67e8f9" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <text x="68" y="44" class="card-title" fill="#f8fafc">Federated Search</text>
+    <text x="20" y="78" class="card-desc">Simultaneous multi-provider lookup</text>
+    <text x="20" y="96" class="card-desc">across Deezer, JioSaavn, Audius,</text>
+    <text x="20" y="114" class="card-desc">Jamendo, iTunes, &amp; MusicBrainz.</text>
+    <rect x="20" y="126" width="95" height="18" rx="4" fill="#06b6d4" fill-opacity="0.12"/>
+    <text x="26" y="139" class="badge" fill="#38bdf8">1-CALL DISCOVERY</text>
+  </g>
+
+  <!-- Row 1, Card 2: Live Streams & Radio -->
+  <g class="card" transform="translate(352, 30)">
+    <rect width="295" height="155" rx="12" fill="#0f172a" stroke="#8b5cf6" stroke-opacity="0.4" stroke-width="1.2" filter="url(#cardShadow)"/>
+    <rect width="295" height="155" rx="12" fill="url(#glowStream)"/>
+    <!-- Icon: Waveform / Radio -->
+    <g transform="translate(20, 20)">
+      <circle cx="18" cy="18" r="16" fill="#8b5cf6" fill-opacity="0.15" stroke="#8b5cf6" stroke-width="1"/>
+      <path d="M12 21V15M15 24V12M18 26V10M21 23V13M24 20V16" stroke="#c084fc" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <text x="68" y="44" class="card-title" fill="#f8fafc">Streams &amp; 40k+ Radios</text>
+    <text x="20" y="78" class="card-desc">Direct 320kbps full track streams,</text>
+    <text x="20" y="96" class="card-desc">30s Deezer previews, and 40,000+</text>
+    <text x="20" y="114" class="card-desc">live radio stations worldwide.</text>
+    <rect x="20" y="126" width="95" height="18" rx="4" fill="#8b5cf6" fill-opacity="0.12"/>
+    <text x="27" y="139" class="badge" fill="#c084fc">DIRECT AUDIO</text>
+  </g>
+
+  <!-- Row 1, Card 3: Free Smart Link Resolver -->
+  <g class="card" transform="translate(675, 30)">
+    <rect width="295" height="155" rx="12" fill="#0f172a" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.2" filter="url(#cardShadow)"/>
+    <rect width="295" height="155" rx="12" fill="url(#glowLinks)"/>
+    <!-- Icon: Universal Link -->
+    <g transform="translate(20, 20)">
+      <circle cx="18" cy="18" r="16" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="1"/>
+      <path d="M14 18a4 4 0 0 0 5.66 0l2.83-2.83a4 4 0 0 0-5.66-5.66L15.5 10.8" fill="none" stroke="#34d399" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M22 14a4 4 0 0 0-5.66 0l-2.83 2.83a4 4 0 0 0 5.66 5.66L20.5 21.2" fill="none" stroke="#34d399" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+    <text x="68" y="44" class="card-title" fill="#f8fafc">Smart Link Resolver</text>
+    <text x="20" y="78" class="card-desc">100% Free replacement for Odesli.</text>
+    <text x="20" y="96" class="card-desc">Convert Spotify, Apple, Deezer, &amp;</text>
+    <text x="20" y="114" class="card-desc">YouTube into universal smartlinks.</text>
+    <rect x="20" y="126" width="105" height="18" rx="4" fill="#10b981" fill-opacity="0.12"/>
+    <text x="26" y="139" class="badge" fill="#34d399">ZERO API TOKENS</text>
+  </g>
+
+  <!-- Row 2, Card 4: Open Metadata Mesh -->
+  <g class="card" transform="translate(30, 215)">
+    <rect width="295" height="155" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-opacity="0.4" stroke-width="1.2" filter="url(#cardShadow)"/>
+    <rect width="295" height="155" rx="12" fill="url(#glowMeta)"/>
+    <!-- Icon: Database / Layers -->
+    <g transform="translate(20, 20)">
+      <circle cx="18" cy="18" r="16" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1"/>
+      <path d="M11 14c0-2 7-2 7-2s7 0 7 2-7 2-7 2-7 0-7-2z" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+      <path d="M11 18c0 2 7 2 7 2s7 0 7-2" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+      <path d="M11 22c0 2 7 2 7 2s7 0 7-2" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+    </g>
+    <text x="68" y="44" class="card-title" fill="#f8fafc">Open Metadata &amp; Art</text>
+    <text x="20" y="78" class="card-desc">MusicBrainz &amp; ListenBrainz catalog,</text>
+    <text x="20" y="96" class="card-desc">Cover Art Archive high-res covers,</text>
+    <text x="20" y="114" class="card-desc">Lrclib lyrics, and artist discography.</text>
+    <rect x="20" y="126" width="100" height="18" rx="4" fill="#f59e0b" fill-opacity="0.12"/>
+    <text x="25" y="139" class="badge" fill="#fbbf24">HIGH-FIDELITY</text>
+  </g>
+
+  <!-- Row 2, Card 5: 100% Free & Unlimited -->
+  <g class="card" transform="translate(352, 215)">
+    <rect width="295" height="155" rx="12" fill="#0f172a" stroke="#ec4899" stroke-opacity="0.4" stroke-width="1.2" filter="url(#cardShadow)"/>
+    <rect width="295" height="155" rx="12" fill="url(#glowFree)"/>
+    <!-- Icon: Unlocked / Infinity -->
+    <g transform="translate(20, 20)">
+      <circle cx="18" cy="18" r="16" fill="#ec4899" fill-opacity="0.15" stroke="#ec4899" stroke-width="1"/>
+      <path d="M15 14v-3a3 3 0 0 1 6 0v3" fill="none" stroke="#f472b6" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="12" y="14" width="12" height="9" rx="2" fill="none" stroke="#f472b6" stroke-width="1.8"/>
+    </g>
+    <text x="68" y="44" class="card-title" fill="#f8fafc">100% Free &amp; Unlimited</text>
+    <text x="20" y="78" class="card-desc">No credit card, no API keys,</text>
+    <text x="20" y="96" class="card-desc">no subscriptions or quotas.</text>
+    <text x="20" y="114" class="card-desc">Ready to plug into any app or bot.</text>
+    <rect x="20" y="126" width="92" height="18" rx="4" fill="#ec4899" fill-opacity="0.12"/>
+    <text x="27" y="139" class="badge" fill="#f472b6">NO PAYWALLS</text>
+  </g>
+
+  <!-- Row 2, Card 6: Edge Deployment -->
+  <g class="card" transform="translate(675, 215)">
+    <rect width="295" height="155" rx="12" fill="#0f172a" stroke="#3b82f6" stroke-opacity="0.4" stroke-width="1.2" filter="url(#cardShadow)"/>
+    <rect width="295" height="155" rx="12" fill="url(#glowEdge)"/>
+    <!-- Icon: Lightning / Cloud -->
+    <g transform="translate(20, 20)">
+      <circle cx="18" cy="18" r="16" fill="#3b82f6" fill-opacity="0.15" stroke="#3b82f6" stroke-width="1"/>
+      <path d="M19 10l-6 8h5l-2 8 8-10h-5l2-6z" fill="#60a5fa" stroke="#3b82f6" stroke-width="1"/>
+    </g>
+    <text x="68" y="44" class="card-title" fill="#f8fafc">Global Edge Network</text>
+    <text x="20" y="78" class="card-desc">Engineered for Cloudflare Workers.</text>
+    <text x="20" y="96" class="card-desc">Sub-millisecond cold starts across</text>
+    <text x="20" y="114" class="card-desc">300+ data centers with auto CORS.</text>
+    <rect x="20" y="126" width="105" height="18" rx="4" fill="#3b82f6" fill-opacity="0.12"/>
+    <text x="25" y="139" class="badge" fill="#60a5fa">CLOUDFLARE EDGE</text>
+  </g>
+</svg>

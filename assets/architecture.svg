@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f6821f" />
+      <stop offset="100%" stop-color="#fa5252" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="480" rx="12" fill="#0b0f19" stroke="rgba(255,255,255,0.08)" />
+
+  <!-- Title -->
+  <text x="50" y="45" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#ffffff">Architecture &amp; Data Flow</text>
+  <text x="50" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="400" fill="#94a3b8">Zero-Quota, Edge-Accelerated Open Music Mesh</text>
+
+  <!-- Step 1: Client -->
+  <g transform="translate(50, 150)">
+    <rect width="180" height="180" rx="10" fill="url(#cardGrad)" stroke="rgba(59, 130, 246, 0.4)" stroke-width="1.5" />
+    <circle cx="90" cy="50" r="22" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" />
+    <text x="90" y="55" text-anchor="middle" font-size="16" fill="#3b82f6">💻</text>
+    <text x="90" y="100" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="16" font-weight="700" fill="#ffffff">Client Apps</text>
+    <text x="90" y="125" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" fill="#94a3b8">Web, Mobile, Bots</text>
+    <text x="90" y="145" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#64748b">CORS Enabled</text>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <path d="M 230 240 L 370 240" stroke="#f6821f" stroke-width="2.5" stroke-dasharray="6,4">
+    <animate attributeName="stroke-dashoffset" values="20;0" dur="1s" repeatCount="indefinite" />
+  </path>
+  <polygon points="370,235 380,240 370,245" fill="#f6821f" />
+  <text x="305" y="225" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#f6821f">HTTPS / JSON</text>
+
+  <!-- Step 2: SayaMusicAPI Edge Core -->
+  <g transform="translate(380, 110)">
+    <rect width="250" height="260" rx="12" fill="url(#cardGrad)" stroke="#f6821f" stroke-width="2" />
+    <rect x="0" y="0" width="250" height="42" rx="12" fill="url(#cfGrad)" />
+    <text x="125" y="27" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="15" font-weight="800" fill="#ffffff">CLOUDFLARE EDGE</text>
+
+    <!-- Hostname Badge -->
+    <rect x="15" y="55" width="220" height="28" rx="6" fill="#0f172a" stroke="rgba(255,255,255,0.1)" />
+    <text x="125" y="74" text-anchor="middle" font-family="monospace" font-size="12" font-weight="600" fill="#38bdf8">saya.shnwaz.pro</text>
+
+    <!-- Module Pills -->
+    <g transform="translate(20, 100)">
+      <rect width="100" height="30" rx="6" fill="#1e293b" />
+      <text x="50" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#cbd5e1">Hono Router</text>
+    </g>
+    <g transform="translate(130, 100)">
+      <rect width="100" height="30" rx="6" fill="#1e293b" />
+      <text x="50" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#cbd5e1">Edge Cache</text>
+    </g>
+    <g transform="translate(20, 140)">
+      <rect width="100" height="30" rx="6" fill="#1e293b" />
+      <text x="50" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#cbd5e1">Smart Links</text>
+    </g>
+    <g transform="translate(130, 140)">
+      <rect width="100" height="30" rx="6" fill="#1e293b" />
+      <text x="50" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#cbd5e1">Aggregator</text>
+    </g>
+    <g transform="translate(20, 180)">
+      <rect width="210" height="30" rx="6" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="1" />
+      <text x="105" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#10b981">Zero Quota / Unlimited</text>
+    </g>
+    <g transform="translate(20, 220)">
+      <text x="105" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#64748b">1,316 Active Endpoints</text>
+    </g>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <path d="M 630 240 L 730 240" stroke="#10b981" stroke-width="2.5" stroke-dasharray="6,4">
+    <animate attributeName="stroke-dashoffset" values="20;0" dur="1s" repeatCount="indefinite" />
+  </path>
+  <polygon points="730,235 740,240 730,245" fill="#10b981" />
+  <text x="685" y="225" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#10b981">Free APIs</text>
+
+  <!-- Step 3: Upstream Providers Stack -->
+  <g transform="translate(740, 70)">
+    <rect width="210" height="340" rx="10" fill="url(#cardGrad)" stroke="rgba(16, 185, 129, 0.3)" />
+    <text x="105" y="30" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#ffffff">Public Music Sources</text>
+
+    <g transform="translate(15, 45)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🍎 Apple Music / iTunes</text>
+    </g>
+    <g transform="translate(15, 75)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🎵 JioSaavn Web</text>
+    </g>
+    <g transform="translate(15, 105)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🧠 MusicBrainz</text>
+    </g>
+    <g transform="translate(15, 135)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">⚡ Audius Protocol</text>
+    </g>
+    <g transform="translate(15, 165)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🎧 Deezer Public</text>
+    </g>
+    <g transform="translate(15, 195)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">📻 Radio Browser</text>
+    </g>
+    <g transform="translate(15, 225)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🏛️ Internet Archive</text>
+    </g>
+    <g transform="translate(15, 255)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🎨 Cover Art Archive</text>
+    </g>
+    <g transform="translate(15, 285)">
+      <rect width="180" height="24" rx="4" fill="#1e293b" />
+      <text x="12" y="16" font-family="-apple-system, sans-serif" font-size="11" fill="#e2e8f0">🔗 Songlink / Smart-links</text>
+    </g>
+  </g>
+</svg>
